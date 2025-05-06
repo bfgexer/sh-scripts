@@ -1,16 +1,19 @@
 #!/bin/bash
 
 # Обновление системы
+echo "update"
 apt update
-apt install openssh-server
+echo "install openssh-server"
+apt install openssh-server -y
+echo "upgrade"
 apt upgrade -y -o Dpkg::Options::="--force-confold"
 
-
+echo "upgrade done"
 # Ввод данных
 read -p "Введите новый SSH-порт: " ssh_port
 read -p "Введите имя пользователя: " username
 read -s -p "Введите пароль для $username: " userpass
-echo
+echo "dfdfdfdf"
 
 # Проверка, существует ли пользователь
 if id "$username" &>/dev/null; then
