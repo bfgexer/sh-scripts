@@ -2,7 +2,7 @@
 read -p "Введите новый SSH-порт: " ssh_port
 read -p "Введите имя пользователя: " username
 read -s -p "Введите пароль для $username: " userpass
-echo "dfdfdfdf"
+echo "молодец"
 
 # Проверка, существует ли пользователь
 if id "$username" &>/dev/null; then
