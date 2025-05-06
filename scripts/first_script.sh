@@ -26,6 +26,11 @@ echo "$username:$userpass" | chpasswd
 usermod -aG sudo "$username"
 echo "✅ Пользователь '$username' создан и добавлен в sudo."
 
+# Разрешаем sudo без пароля
+echo "$username ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/$username"
+chmod 440 "/etc/sudoers.d/$username"
+echo "🛡️ Пользователю $username разрешён sudo без пароля."
+
 # Настройка SSH-ключей
 mkdir -p /home/"$username"/.ssh
 wget -qO /home/"$username"/.ssh/authorized_keys https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/scripts/authorized_keys
