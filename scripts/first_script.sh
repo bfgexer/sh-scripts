@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Путь к лог-файлу
+LOG_FILE="/var/log/first_script_setup.log"
+
+# Создаём лог-файл (если можно)
+touch "$LOG_FILE" || {
+    echo "❌ Не удалось создать лог-файл $LOG_FILE. Проверьте права." >&2
+    exit 1
+}
+
+# Запускаем логирование всего вывода (stdout и stderr)
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "📌 Лог запуска: $(date)"
+echo "----------------------------------------"
+
 # Обновление системы без замены конфигурационных файлов
 apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confold"
 
@@ -22,7 +37,6 @@ usermod -aG sudo "$username"
 echo "✅ Пользователь '$username' создан и добавлен в sudo."
 
 # Настройка SSH-ключей
-echo "установка ssh ключа"
 mkdir -p /home/"$username"/.ssh
 wget -qO /home/"$username"/.ssh/authorized_keys https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/scripts/authorized_keys
 chown -R "$username":"$username" /home/"$username"/.ssh
@@ -58,4 +72,4 @@ systemctl restart ssh && echo "🔁 SSH перезапущен."
 
 # Завершение
 echo -e "\n✅ Готово! Используй порт $ssh_port и логин '$username' для входа по SSH через ключ."
-
+echo "📄 Лог сохранён: $LOG_FILE"
