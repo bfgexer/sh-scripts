@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Обновление системы
-apt update && apt upgrade -y
+apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confold"
+
 
 # Запрос данных
 read -p "Введите новый SSH-порт: " ssh_port
