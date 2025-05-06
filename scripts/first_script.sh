@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Обновление системы
+apt update
 apt upgrade -y -o Dpkg::Options::="--force-confold"
 
 
