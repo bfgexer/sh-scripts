@@ -39,6 +39,17 @@ chmod 700 /home/"$username"/.ssh
 chmod 600 /home/"$username"/.ssh/authorized_keys
 echo "🔐 Публичный ключ добавлен в /home/$username/.ssh/authorized_keys"
 
+#сохранение переменных
+user_vars_dir="/home/$username/var"
+mkdir -p "$user_vars_dir"
+
+echo "Port=$ssh_port" > "$user_vars_dir/myvars.env"
+echo "Username=$username" >> "$user_vars_dir/myvars.env"
+
+chown -R "$username:$username" "$user_vars_dir"
+echo "📝 Переменные сохранены в $user_vars_dir/myvars.env"
+
+
 # Настройка sshd_config
 sshd_config="/etc/ssh/sshd_config"
 
