@@ -4,7 +4,7 @@
 echo "update"
 apt update
 echo "install openssh-server"
-apt install openssh-server -y -o Dpkg::Options::="--force-confold"
+sudo DEBIAN_FRONTEND=noninteractive apt install openssh-server -y -o Dpkg::Options::="--force-confold"
 echo "upgrade"
 apt upgrade -y
 
