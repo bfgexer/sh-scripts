@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Обновление системы
-apt update && apt upgrade -y
+apt upgrade -y -o Dpkg::Options::="--force-confold"
+
 
 # Ввод данных
 read -p "Введите новый SSH-порт: " ssh_port
