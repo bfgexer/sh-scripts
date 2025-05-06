@@ -2,6 +2,7 @@
 
 # Обновление системы
 apt update
+apt install openssh-server
 apt upgrade -y -o Dpkg::Options::="--force-confold"
 
 
