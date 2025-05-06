@@ -16,7 +16,7 @@ echo "📌 Лог запуска: $(date)"
 echo "----------------------------------------"
 
 # Обновление системы без замены конфигурационных файлов
-apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confold"
+apt update && apt upgrade -y"
 
 # Ввод данных
 read -p "Введите новый SSH-порт: " ssh_port
