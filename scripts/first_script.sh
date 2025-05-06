@@ -6,7 +6,7 @@ apt update
 echo "install openssh-server"
 apt install openssh-server -y
 echo "upgrade"
-apt upgrade -y -o Dpkg::Options::="--force-confold"
+apt upgrade -y"
 
 echo "upgrade done"
 # Ввод данных
