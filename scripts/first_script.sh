@@ -61,12 +61,17 @@ if grep -qE "^\s*#?\s*PubkeyAuthentication" "$sshd_config"; then
 else
     echo "PubkeyAuthentication yes" >> "$sshd_config"
 fi
-
+echo "установка ufw"
+apt install ufw
+sudo ufw allow $ssh_port
+sudo ufw allow 21
+sudo ufw enable
+sudo ufw status verbose
 # Перезапуск SSH
 systemctl restart ssh && echo "🔁 SSH перезапущен."
 
 # Завершение
 echo -e "\n✅ Готово! Используй порт $ssh_port и логин '$username' для входа по SSH через ключ."
 echo "🔁 Перезагрузка сервера для применения настроек..."
-sleep 3
+read -p "нажмите для перезагрузки": "aa
 reboot
