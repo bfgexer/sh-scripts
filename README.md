@@ -16,3 +16,12 @@ wget -O ~/tmp/myscript.sh https://raw.githubusercontent.com/bfgexer/sh-scripts/r
 chmod +x ~/tmp/myscript.sh
 sudo ~/tmp/myscript.sh
 ```
+
+скрипт для fail2ban
+
+```bash
+mkdir -p ~/tmp
+wget -O ~/tmp/myscript.sh https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/scripts/fail2ban_install.sh
+chmod +x ~/tmp/myscript.sh
+sudo ~/tmp/myscript.sh
+```
