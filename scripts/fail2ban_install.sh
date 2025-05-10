@@ -9,7 +9,9 @@ sudo sed -i '/^\[nginx-http-auth\]/a enabled = true\nmaxretry = 3\nbantime = 1h\
 sudo systemctl restart fail2ban
 
 
-
+sudo fail2ban-client status
+sudo fail2ban-client status sshd
+sudo fail2ban-client status nginx-http-auth
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
 echo "🧹 Удаляю скрипт: $SCRIPT_PATH"
