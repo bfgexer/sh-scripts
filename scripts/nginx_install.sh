@@ -6,7 +6,7 @@ sudo systemctl enable nginx
 sudo ufw allow 'Nginx Full'
 sudo ufw status verbose
 sudo mkdir -p /var/www/test.nabegator3000.site/html
-sudo wget -p /var/www/test.nabegator3000.site/html https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/html/index.html
+sudo wget -p /var/www/test.nabegator3000.site/html/index.html https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/html/index.html
 
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
