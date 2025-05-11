@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Симуляция: четыре вида шариков и змейка</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #111;
+            color: #eee;
+            font-family: sans-serif;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        #ui button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            color: #eee;
+            cursor: pointer;
+        }
+
+        #ui button:hover {
+            background: #444;
+        }
+
+        #stats div {
+            line-height: 1.5;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <button id="startPause">Старт</button>
+        <button id="reset">Сброс</button>
+        <div id="stats">
+            <div>Время: <span id="time">0</span></div>
+            <div>Растений: <span id="plantCount">0</span></div>
+            <div>Вид A: <span id="countA">0</span></div>
+            <div>Вид B: <span id="countB">0</span></div>
+            <div>Вид C: <span id="countC">0</span></div>
+            <div>Вид D: <span id="countD">0</span></div>
+            <div>Длина змейки: <span id="snakeLength">0</span></div>
+            <div>Поколение: <span id="generation">0</span></div>
+        </div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width = window.innerWidth;
+        const H = canvas.height = window.innerHeight;
+
+        const PHRASES = ["хамас", "это не впн", "привет", "хаос", "евреи", "СВО"];
+        const INITIAL_PLANTS = 300;
+        const INITIAL_COUNTS = { A: 20, B: 20, C: 20, D: 20 };
+        const MAX_PLANTS = 800, PLANT_GROW_RATE = 0.08;
+        const ENERGY_DECAY = 0.005, ENERGY_FROM_PLANT = 20, EAT_CD = 20;
+        const BASE_SPEED = 1.8, BASE_SENSE = 120, FLEE_DIST = 100;
+        const MUT_RATE = 0.12;
+        const SNAKE_SPEED = BASE_SPEED + 0.1, SNAKE_CAP = 6;
+        const BASE_SIZE = 8;
+        const WANDER_MIN = 60, WANDER_MAX = 180;
+
+        let plants = [], A = [], B = [], C = [], D = [], textMsgs = [];
+        let snake = { pos: [], len: 1 };
+        let time = 0, gen = 0, running = false, raf;
+
+        function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        class Plant {
+            constructor(x, y) { this.x = x; this.y = y; }
+            draw() { ctx.fillStyle = '#0f0'; ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, 2 * Math.PI); ctx.fill(); }
+        }
+
+        class Creature {
+            constructor(x, y, type) {
+                this.x = x; this.y = y; this.type = type;
+                this.speed = BASE_SPEED + (Math.random() - 0.5);
+                this.sense = BASE_SENSE + (Math.random() * 20 - 10);
+                this.energy = 50; this.cd = 0; this.eaten = 0;
+                this.size = BASE_SIZE;
+                this.dir = Math.random() * 2 * Math.PI;
+                this.wt = 0; this.wThresh = rand(WANDER_MIN, WANDER_MAX);
+            }
+            update() {
+                // flee
+                if (snake.pos.length) {
+                    const h = snake.pos[0]; const dx = this.x - h.x, dy = this.y - h.y;
+                    if (Math.hypot(dx, dy) < FLEE_DIST) this.dir = Math.atan2(dy, dx);
+                }
+                // eat
+                if (this.cd > 0) this.cd--; this.energy -= ENERGY_DECAY;
+                if (this.energy <= 0) return false;
+                let nearest = null, bd = Infinity;
+                plants.forEach(p => { const d = Math.hypot(p.x - this.x, p.y - this.y); if (d < bd && d < this.sense) { bd = d; nearest = p; } });
+                if (nearest) {
+                    this.dir = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+                    this.x += Math.cos(this.dir) * this.speed;
+                    this.y += Math.sin(this.dir) * this.speed;
+                    if (bd < 5 && this.cd === 0) {
+                        this.energy += ENERGY_FROM_PLANT; this.eaten++; this.size++;
+                        plants.splice(plants.indexOf(nearest), 1); this.cd = EAT_CD;
+                        if (this.eaten >= 3) {
+                            this.eaten = 0;
+                            const c = new Creature(this.x, this.y, this.type);
+                            c.size = this.size; c.speed = this.speed * (1 + (Math.random() - 0.5) * MUT_RATE);
+                            c.sense = this.sense * (1 + (Math.random() - 0.5) * MUT_RATE); c.energy = this.energy;
+                            this.spawn(c); gen++;
+                        }
+                    }
+                    return this._bounds();
+                }
+                // wander
+                this.wt++; if (this.wt >= this.wThresh) {
+                    this.dir = Math.random() * 2 * Math.PI; this.wt = 0; this.wThresh = rand(WANDER_MIN, WANDER_MAX);
+                }
+                this.x += Math.cos(this.dir) * this.speed;
+                this.y += Math.sin(this.dir) * this.speed;
+                return this._bounds();
+            }
+            spawn(c) {
+                if (this.type === 'A') A.push(c); else if (this.type === 'B') B.push(c);
+                else if (this.type === 'C') C.push(c); else D.push(c);
+            }
+            _bounds() { this.x = Math.max(0, Math.min(W, this.x)); this.y = Math.max(0, Math.min(H, this.y)); return true; }
+            draw() {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.dir);
+                ctx.fillStyle = this._col(); ctx.beginPath(); ctx.arc(0, 0, this.size, 0, 2 * Math.PI); ctx.fill();
+                // mouth
+                const mo = Math.sin(Date.now() / 200 + this.size) * (this.size * 0.1), mw = this.size * 0.5;
+                ctx.fillStyle = '#900'; ctx.beginPath(); ctx.moveTo(-mw, mo);
+                ctx.quadraticCurveTo(0, mo * 2, mw, mo);
+                ctx.quadraticCurveTo(0, 0, -mw, mo); ctx.fill();
+                // eyes
+                const ex = this.size * 0.35, ey = -this.size * 0.4, er = this.size * 0.3;
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-ex, ey, er, 0, 2 * Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(ex, ey, er, 0, 2 * Math.PI); ctx.fill();
+                ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-ex + er * 0.3, ey, er * 0.6, 0, 2 * Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(ex + er * 0.3, ey, er * 0.6, 0, 2 * Math.PI); ctx.fill(); ctx.restore();
+            }
+            _col() { return this.type === 'A' ? '#39f' : this.type === 'B' ? '#f33' : this.type === 'C' ? '#3f9' : '#ff3'; }
+        }
+
+        function init() {
+            plants = []; A = []; B = []; C = []; D = []; textMsgs = [];
+            snake = { pos: [{ x: W / 2, y: H / 2 }], len: 1 }; time = gen = 0;
+            for (let i = 0; i < INITIAL_PLANTS; i++) plants.push(new Plant(rand(0, W), rand(0, H)));
+            ['A', 'B', 'C', 'D'].forEach((t, i) => {
+                for (let j = 0; j < INITIAL_COUNTS[t]; j++) eval(t).push(new Creature(rand(0, W), rand(0, H), t));
+            });
+            initTexts(); updateStats(); drawAll();
+        }
+
+        function drawAll() {
+            ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+            plants.forEach(p => p.draw());[A, B, C, D].forEach(arr => arr.forEach(c => c.draw()));
+            drawSnake(); drawTexts();
+        }
+
+        function step() {
+            if (plants.length < MAX_PLANTS && Math.random() < PLANT_GROW_RATE) plants.push(new Plant(rand(0, W), rand(0, H)));
+            A = A.filter(c => c.update()); B = B.filter(c => c.update());
+            C = C.filter(c => c.update()); D = D.filter(c => c.update());
+            ['A', 'B', 'C', 'D'].forEach(t => {
+                const arr = eval(t); if (arr.length < 2) arr.push(new Creature(rand(0, W), rand(0, H), t));
+            });
+            updateSnake(); drawAll(); time++; updateStats(); if (running) raf = requestAnimationFrame(step);
+        }
+
+        document.getElementById('startPause').onclick = () => {
+            running = !running;
+            document.getElementById('startPause').textContent = running ? 'Пауза' : 'Старт';
+            if (running) step(); else cancelAnimationFrame(raf);
+        };
+        document.getElementById('reset').onclick = () => { running = false; cancelAnimationFrame(raf); document.getElementById('startPause').textContent = 'Старт'; init(); };
+        window.onload = init;
+
+        function updateSnake() {
+            if (!snake.pos.length) return;
+            const head = snake.pos[0]; const all = [...A, ...B, ...C, ...D]; if (!all.length) return;
+            const target = all.reduce((max, c) => c.size > max.size ? c : max, all[0]);
+            const ang = Math.atan2(target.y - head.y, target.x - head.x);
+            let nx = head.x + Math.cos(ang) * SNAKE_SPEED;
+            let ny = head.y + Math.sin(ang) * SNAKE_SPEED;
+            nx = Math.max(0, Math.min(W, nx)); ny = Math.max(0, Math.min(H, ny));
+            snake.pos.unshift({ x: nx, y: ny }); if (snake.pos.length > snake.len) snake.pos.pop();
+            if (Math.hypot(target.x - nx, target.y - ny) < SNAKE_CAP) {
+                const arr = target.type === 'A' ? A : target.type === 'B' ? B : target.type === 'C' ? C : D;
+                const idx = arr.indexOf(target); if (idx !== -1) arr.splice(idx, 1);
+                snake.len++; if (snake.len > 15) plants.push(new Plant(nx, ny));
+            }
+        }
+
+        function drawSnake() {
+            if (!snake.pos.length) return;
+            const h = snake.pos[0]; const n = snake.pos[1] || { x: h.x - 1, y: h.y }; const ang = Math.atan2(h.y - n.y, h.x - n.x);
+            ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(ang);
+            ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.arc(0, 0, BASE_SIZE * 1.5, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(BASE_SIZE * 0.5, -BASE_SIZE * 0.3, BASE_SIZE * 0.2, 0, 2 * Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(BASE_SIZE * 0.5, BASE_SIZE * 0.3, BASE_SIZE * 0.2, 0, 2 * Math.PI); ctx.fill();
+            ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(BASE_SIZE * 0.8, 0); ctx.lineTo(BASE_SIZE * 1.4, -BASE_SIZE * 0.4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(BASE_SIZE * 0.8, 0); ctx.lineTo(BASE_SIZE * 1.4, BASE_SIZE * 0.4); ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = '#ff0'; snake.pos.slice(1).forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, BASE_SIZE, 0, 2 * Math.PI); ctx.fill(); });
+        }
+
+        function initTexts() { textMsgs = []; PHRASES.forEach(ph => textMsgs.push({ ph, x: rand(0, W), y: rand(0, H), vx: (Math.random() * 2 - 1) * 0.5, vy: (Math.random() * 2 - 1) * 0.5, ang: Math.random() * 2 * Math.PI, avel: (Math.random() * 2 - 1) * 0.02, phase: Math.random() * 2 * Math.PI })); }
+        function drawTexts() { const t = performance.now() / 500; ctx.font = '24px sans-serif'; textMsgs.forEach(m => { m.x = (m.x + m.vx + W) % W; m.y = (m.y + m.vy + H) % H; m.ang += m.avel; const a = 0.5 + 0.5 * Math.sin(t + m.phase); ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.ang); ctx.globalAlpha = a; ctx.fillStyle = '#ff0'; ctx.fillText(m.ph, 0, 0); ctx.restore(); }); ctx.globalAlpha = 1; }
+        function updateStats() {
+            document.getElementById('time').textContent = time; document.getElementById('plantCount').textContent = plants.length;
+            document.getElementById('countA').textContent = A.length; document.getElementById('countB').textContent = B.length;
+            document.getElementById('countC').textContent = C.length; document.getElementById('countD').textContent = D.length;
+            document.getElementById('snakeLength').textContent = snake.len; document.getElementById('generation').textContent = gen;
+        }
+    </script>
+</body>
+
+</html>
