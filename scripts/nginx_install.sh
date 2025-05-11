@@ -13,9 +13,26 @@ sudo chmod -R 755 /var/www/$domain
 
 sudo wget -O /var/www/$domain/html/index.html https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/html/index.html
 
+
+
+sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d $domain
+sudo certbot renew --dry-run
+
 sudo tee /etc/nginx/sites-available/$domain.conf > /dev/null <<EOF
 server {
     listen 80;
+    listen [::]:80;
+    server_name $domain;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443;
     server_name $domain;
 
     root /var/www/$domain/html;
@@ -24,18 +41,17 @@ server {
     access_log /var/log/nginx/$domain.access.log;
     error_log  /var/log/nginx/$domain.error.log;
 
+    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
     location / {
-        try_files \$uri \$uri/ =404;
+        try_files $uri $uri/ =404;
     }
 }
+
 EOF
-
-sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d $domain
-sudo certbot renew --dry-run
-
 
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
