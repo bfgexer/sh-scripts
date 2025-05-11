@@ -16,7 +16,7 @@ sudo wget -O /var/www/$domain/html/index.html https://raw.githubusercontent.com/
 
 
 sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+
 sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d $domain
 sudo certbot renew --dry-run
@@ -52,7 +52,7 @@ server {
 }
 
 EOF
-
+sudo nginx -t && sudo systemctl reload nginx
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
 echo "🧹 Удаляю скрипт: $SCRIPT_PATH"
