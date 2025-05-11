@@ -34,6 +34,9 @@ sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d $domain
 sudo certbot renew --dry-run
 
+sudo chmod 755 /etc/letsencrypt/live
+sudo chmod 755 /etc/letsencrypt/archive
+
 sudo nginx -t && sudo systemctl reload nginx
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
