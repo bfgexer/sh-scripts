@@ -8,6 +8,9 @@ sudo ufw status verbose
 read -p "Введите домен: " domain
 sudo mkdir -p /var/www/$domain/html
 sudo chown -R $USER:$USER /var/www/$domain/html
+sudo chown -R www-data:www-data /var/www/$domain
+sudo chmod -R 755 /var/www/$domain
+
 sudo wget -O /var/www/$domain/html/index.html https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/html/index.html
 
 sudo tee /etc/nginx/sites-available/$domain.conf > /dev/null <<EOF
