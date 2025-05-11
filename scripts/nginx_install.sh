@@ -1,5 +1,5 @@
 sudo apt update
-sudo apt certbot python3-certbot-nginx -y
+sudo apt install certbot python3-certbot-nginx -y
 sudo systemctl start nginx
 sudo systemctl enable nginx
 #открываем порты:
