@@ -31,11 +31,11 @@ EOF
 
 sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-# sudo apt install certbot python3-certbot-nginx
-# sudo certbot --nginx -d $domain
-# sudo certbot renew --dry-run
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d $domain
+sudo certbot renew --dry-run
 
-# sudo nginx -t && sudo systemctl reload nginx
+sudo nginx -t && sudo systemctl reload nginx
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
 echo "🧹 Удаляю скрипт: $SCRIPT_PATH"
