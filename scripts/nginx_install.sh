@@ -7,7 +7,7 @@ sudo ufw allow 'Nginx Full'
 sudo ufw status verbose
 read -p "Введите домен: " domain
 sudo mkdir -p /var/www/$domain/html
-sudo chown -R $USER:$USER /var/www/$domain/htm
+sudo chown -R $USER:$USER /var/www/$domain/html
 sudo wget -O /var/www/$domain/html/index.html https://raw.githubusercontent.com/bfgexer/sh-scripts/refs/heads/main/html/index.html
 
 sudo tee /etc/nginx/sites-available/$domain.conf > /dev/null <<EOF
