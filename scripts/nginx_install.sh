@@ -1,5 +1,5 @@
 sudo apt update
-sudo apt install nginx -y
+sudo apt certbot python3-certbot-nginx -y
 sudo systemctl start nginx
 sudo systemctl enable nginx
 #открываем порты:
@@ -29,6 +29,10 @@ EOF
 sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 sudo systemctl status nginx
+
+sudo certbot --nginx -d $domain -d www.$domain
+sudo certbot renew --dry-run
+
 
 echo "скрипт скачался и запустился"
 SCRIPT_PATH="$(realpath "$0")"
