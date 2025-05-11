@@ -5,7 +5,7 @@ sudo systemctl enable nginx
 #открываем порты:
 sudo ufw allow 'Nginx Full'
 sudo ufw status verbose
-
+sudo mkdir -p /var/www/test.nabegator.site/html
 
 
 echo "скрипт скачался и запустился"
