@@ -30,7 +30,7 @@ server {
 EOF
 sudo ln -s /etc/nginx/sites-available/$domain.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-sudo apt install certbot python3-certbot-nginx -y
+# sudo apt install certbot python3-certbot-nginx -y
 # sudo certbot --nginx -d $domain
 # sudo certbot renew --dry-run
 
